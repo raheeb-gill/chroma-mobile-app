@@ -1,11 +1,15 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Home, Car, Search, Activity, User } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
@@ -13,7 +17,13 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#B2B2B2',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: 60 + insets.bottom,
+            paddingBottom: insets.bottom || 8,
+          },
+        ],
         tabBarLabelStyle: styles.tabBarLabel,
       }}>
       <Tabs.Screen
@@ -43,6 +53,12 @@ export default function TabLayout() {
             </View>
           ),
         }}
+        listeners={() => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push('/vin-entry');
+          },
+        })}
       />
       <Tabs.Screen
         name="analytics"
@@ -67,10 +83,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
-    height: Platform.OS === 'ios' ? 88 : 64,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
     paddingTop: 8,
-    
   },
   tabBarLabel: {
     fontSize: 10,

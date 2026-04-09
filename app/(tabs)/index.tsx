@@ -1,12 +1,47 @@
-import React from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, Pressable, ScrollView, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, Bell, ChevronDown, Car, TrendingUp, ArrowRight, ListChecks } from 'lucide-react-native';
-import { Image } from 'expo-image';
+import { Menu, Bell, ChevronDown, Car, TrendingUp, ArrowRight, ListChecks, Atom, Search, X, Activity } from 'lucide-react-native';
+import { FlashList } from '@shopify/flash-list';
 
-const nalleyLogo = require('@/assets/images/react-logo.png');
+import { Dealer, mockSubDealers } from '@/constants/mock-data';
 
 export default function DashboardScreen() {
+  const [isSubDealerModalVisible, setSubDealerModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDealerId, setSelectedDealerId] = useState<string | null>(null);
+
+  const filteredDealers = React.useMemo(() => {
+    if (!searchQuery) return mockSubDealers;
+    return mockSubDealers.filter((d) =>
+      d.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  const renderDealerItem = ({ item }: { item: Dealer }) => {
+    const isSelected = selectedDealerId === item.id;
+    return (
+      <Pressable
+        style={[styles.modalDealerCard, isSelected && styles.modalDealerCardSelected]}
+        onPress={() => setSelectedDealerId(item.id)}
+      >
+        <View style={styles.modalDealerLogoContainer}>
+          <Text style={styles.modalDealerLogoFallback}>NALLEY</Text>
+        </View>
+        <View style={styles.modalDealerInfo}>
+          <Text style={styles.modalDealerName}>{item.name}</Text>
+          <View style={styles.modalDealerMetaRow}>
+            <Car size={14} color="#777777" />
+            <Text style={styles.modalDealerMetaText}>{item.vehiclesCount} vehicles</Text>
+          </View>
+        </View>
+        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+          {isSelected && <Car size={14} color="#FFFFFF" />}
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerBackground} />
@@ -38,10 +73,10 @@ export default function DashboardScreen() {
             </Text>
           </View>
 
-          <View style={styles.mainCard}>
+          <Pressable style={styles.mainDealerCard} onPress={() => setSubDealerModalVisible(true)}>
             <View style={styles.mainDealerRow}>
               <View style={styles.dealerLogoBox}>
-                <Image source={nalleyLogo} style={styles.dealerLogo} contentFit="contain" />
+                <Atom size={28} color="#1C9EF4" />
               </View>
               <View style={styles.dealerInfo}>
                 <Text style={styles.dealerName}>Nalley Honda</Text>
@@ -52,38 +87,38 @@ export default function DashboardScreen() {
               </View>
               <ChevronDown color="#1C9EF4" size={24} />
             </View>
+          </Pressable>
 
-            <View style={styles.statsContainer}>
-              <View style={styles.statCard}>
-                <View style={[styles.statIconBox, { backgroundColor: '#1C9EF4' }]}>
-                  <Car size={24} color="#FFFFFF" />
-                </View>
-                <View style={styles.statContent}>
-                  <View style={styles.statHeaderRow}>
-                    <Text style={styles.statLabel}>Total Vehicles</Text>
-                    <View style={styles.trendRow}>
-                      <TrendingUp size={12} color="#34C759" />
-                      <Text style={styles.trendTextPositive}>12 <Text style={styles.trendContext}>from last month</Text></Text>
-                    </View>
-                  </View>
-                  <Text style={styles.statValue}>247</Text>
-                </View>
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <View style={[styles.statIconBox, { backgroundColor: '#1C9EF4' }]}>
+                <Car size={24} color="#FFFFFF" />
               </View>
-
-              <View style={styles.statCard}>
-                <View style={[styles.statIconBox, { backgroundColor: '#1C9EF4' }]}>
-                  <ListChecks size={24} color="#FFFFFF" />
-                </View>
-                <View style={styles.statContent}>
-                  <View style={styles.statHeaderRow}>
-                    <Text style={styles.statLabel}>Active Listings</Text>
-                    <View style={styles.trendRow}>
-                      <TrendingUp size={12} color="#34C759" />
-                      <Text style={styles.trendTextPositive}>76% <Text style={styles.trendContext}>of inventory</Text></Text>
-                    </View>
+              <View style={styles.statContent}>
+                <View style={styles.statHeaderRow}>
+                  <Text style={styles.statLabel}>Total Vehicles</Text>
+                  <View style={styles.trendRow}>
+                    <TrendingUp size={12} color="#34C759" />
+                    <Text style={styles.trendTextPositive}>12 <Text style={styles.trendContext}>from last month</Text></Text>
                   </View>
-                  <Text style={styles.statValue}>189</Text>
                 </View>
+                <Text style={styles.statValue}>247</Text>
+              </View>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={[styles.statIconBox, { backgroundColor: '#1C9EF4' }]}>
+                <ListChecks size={24} color="#FFFFFF" />
+              </View>
+              <View style={styles.statContent}>
+                <View style={styles.statHeaderRow}>
+                  <Text style={styles.statLabel}>Active Listings</Text>
+                  <View style={styles.trendRow}>
+                    <TrendingUp size={12} color="#34C759" />
+                    <Text style={styles.trendTextPositive}>76% <Text style={styles.trendContext}>of inventory</Text></Text>
+                  </View>
+                </View>
+                <Text style={styles.statValue}>189</Text>
               </View>
             </View>
           </View>
@@ -112,7 +147,7 @@ export default function DashboardScreen() {
 
             <Pressable style={styles.actionCard}>
               <View style={styles.actionIconBox}>
-                <TrendingUp size={20} color="#1C9EF4" />
+                <Activity size={20} color="#1C9EF4" />
               </View>
               <View style={styles.actionInfo}>
                 <Text style={styles.actionTitle}>Analytics</Text>
@@ -124,6 +159,63 @@ export default function DashboardScreen() {
 
         </ScrollView>
       </SafeAreaView>
+
+      {/* Sub Dealer Modal */}
+      <Modal
+        visible={isSubDealerModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSubDealerModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Switch Sub Dealer</Text>
+              <Pressable
+                style={styles.modalCloseButton}
+                onPress={() => setSubDealerModalVisible(false)}
+              >
+                <X size={16} color="#999999" />
+              </Pressable>
+            </View>
+
+            <View style={styles.modalSearchContainer}>
+              <TextInput
+                style={styles.modalSearchInput}
+                placeholder="Search dealer"
+                placeholderTextColor="#999999"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCorrect={false}
+              />
+              <Search size={20} color="#1E1E1E" style={styles.modalSearchIcon} />
+            </View>
+
+            <View style={styles.modalListContainer}>
+              <FlashList
+                data={filteredDealers}
+                renderItem={renderDealerItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.modalListContent as any}
+                showsVerticalScrollIndicator={false}
+              />
+            </View>
+
+            <View style={styles.modalFooter}>
+              <Pressable
+                onPress={() => setSubDealerModalVisible(false)}
+                disabled={!selectedDealerId}
+                style={[
+                  styles.modalSwitchButton,
+                  !selectedDealerId ? styles.modalSwitchButtonDisabled : styles.modalSwitchButtonEnabled,
+                ]}
+              >
+                <Text style={styles.modalSwitchButtonText}>Switch Sub Dealer</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -218,11 +310,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  mainCard: {
+  mainDealerCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginHorizontal: 20,
     padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -232,10 +325,6 @@ const styles = StyleSheet.create({
   mainDealerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    marginBottom: 20,
   },
   dealerLogoBox: {
     width: 48,
@@ -270,11 +359,17 @@ const styles = StyleSheet.create({
     color: '#777777',
   },
   statsContainer: {
-    gap: 20,
+    gap: 16,
   },
   statCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginHorizontal: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
   statIconBox: {
     width: 48,
@@ -387,5 +482,147 @@ const styles = StyleSheet.create({
   actionSubtitle: {
     fontSize: 14,
     color: '#999999',
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '80%',
+    paddingTop: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#555555',
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    height: 48,
+    marginHorizontal: 20,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  modalSearchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1E1E1E',
+    height: '100%',
+  },
+  modalSearchIcon: {
+    marginLeft: 8,
+  },
+  modalListContainer: {
+    flex: 1,
+  },
+  modalListContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  modalDealerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  modalDealerCardSelected: {
+    borderColor: '#2492D4',
+  },
+  modalDealerLogoContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  modalDealerLogoFallback: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#1E1E1E',
+  },
+  modalDealerInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  modalDealerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E1E1E',
+  },
+  modalDealerMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  modalDealerMetaText: {
+    fontSize: 14,
+    color: '#777777',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  checkboxSelected: {
+    backgroundColor: '#2492D4',
+    borderColor: '#2492D4',
+  },
+  modalFooter: {
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  modalSwitchButton: {
+    height: 48,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalSwitchButtonEnabled: {
+    backgroundColor: '#2492D4',
+  },
+  modalSwitchButtonDisabled: {
+    backgroundColor: '#979797',
+  },
+  modalSwitchButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
