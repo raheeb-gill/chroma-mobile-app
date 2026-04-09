@@ -1,16 +1,19 @@
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { Platform, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const buttonBottomPadding = (Platform.OS === 'ios' ? 12 : 18) + insets.bottom;
 
   const handleGetStarted = () => {
-    router.replace('/(tabs)');
+    router.push('/(auth)/email');
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <Image
         source={require('@/assets/images/b4212d25001397ceb077902f613515655c49cc74.jpg')}
         style={styles.backgroundImage}
@@ -24,7 +27,7 @@ export default function WelcomeScreen() {
         </View>
       </View>
 
-      <View style={styles.buttonContainer}>
+      <View style={[styles.buttonContainer, { paddingBottom: buttonBottomPadding }]}>
         <Pressable style={styles.button} onPress={handleGetStarted}>
           <Text style={styles.buttonText}>Get Started</Text>
         </Pressable>

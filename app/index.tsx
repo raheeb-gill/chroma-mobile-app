@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function SplashScreen() {
   }, [router]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.content}>
         <Text style={styles.brand}>CHROMACARS</Text>
         <Text style={styles.tagline}>Manage your Dealership Smarter.</Text>
