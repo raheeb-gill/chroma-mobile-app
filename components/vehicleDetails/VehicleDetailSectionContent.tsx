@@ -12,6 +12,7 @@ interface VehicleDetailSectionContentProps {
   section?: string;
   title: string;
   vehicle: Vehicle;
+  onInputFocus?: (node: any) => void;
 }
 
 interface SummaryField {
@@ -190,6 +191,7 @@ export const VehicleDetailSectionContent = ({
   section,
   title,
   vehicle,
+  onInputFocus,
 }: VehicleDetailSectionContentProps) => {
   const [activeMediaTab, setActiveMediaTab] = useState<MediaTab>('Media');
   const [summaryValues, setSummaryValues] = useState<Record<string, string>>(() =>
@@ -275,7 +277,10 @@ export const VehicleDetailSectionContent = ({
     return fields.map((field) => {
       const isMultiline = Boolean(field.multiline);
       return (
-        <View key={field.label} style={styles.fieldBlock}>
+        <View 
+          key={field.label} 
+          style={styles.fieldBlock}
+        >
           <Text style={styles.fieldLabel}>{field.label}</Text>
           <View
             style={[
@@ -292,6 +297,11 @@ export const VehicleDetailSectionContent = ({
               ]}
               value={values[field.label]}
               onChangeText={(value) => onChangeValue(field.label, value)}
+              onFocus={(e) => {
+                if (onInputFocus) {
+                  onInputFocus(e.target);
+                }
+              }}
               placeholderTextColor="#999999"
               selectionColor="#2492D4"
               multiline={isMultiline}

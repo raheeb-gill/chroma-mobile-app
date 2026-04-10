@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -16,6 +16,11 @@ export default function VehicleDetailSectionScreen() {
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
+  
+  // Add a ref to track if the keyboard is currently animating or shown
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
   const section = useMemo(() => {
     return Array.isArray(sectionParam) ? sectionParam[0] : sectionParam;
   }, [sectionParam]);
@@ -32,13 +37,37 @@ export default function VehicleDetailSectionScreen() {
     return getVehicleDetailSectionLabel(section ?? '');
   }, [section]);
 
+  const isKeyboardVisible = keyboardHeight > 0;
+
+  useEffect(() => {
+    // Listen to frame events to get exact keyboard height
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
   const contentInsetStyle = useMemo(() => {
-    return { paddingBottom: insets.bottom + 96 };
-  }, [insets.bottom]);
+    // The ultimate fix for forms: don't use KeyboardAvoidingView for the whole screen
+    // Instead, pad the bottom of the ScrollView by the exact height of the keyboard
+    // This allows natural scrolling all the way down, without weird layout shifts
+    return { paddingBottom: isKeyboardVisible ? keyboardHeight + 80 : insets.bottom + 90 };
+  }, [insets.bottom, isKeyboardVisible, keyboardHeight]);
 
   const footerInsetStyle = useMemo(() => {
-    return { paddingBottom: insets.bottom + 16 };
-  }, [insets.bottom]);
+    // Push the footer up precisely by the keyboard height
+    return { paddingBottom: isKeyboardVisible ? keyboardHeight + 12 : insets.bottom + 16 };
+  }, [insets.bottom, isKeyboardVisible, keyboardHeight]);
 
   const headerStyle = useMemo(() => {
     return {
@@ -51,6 +80,26 @@ export default function VehicleDetailSectionScreen() {
     router.back();
   }, [router]);
 
+  const handleInputFocus = useCallback((node: any) => {
+    if (scrollViewRef.current && node) {
+      setTimeout(() => {
+        // Find the node relative to the ScrollView, and explicitly ask the ScrollView 
+        // to scroll so that this node is visible.
+        // `scrollToFocusedInput` is provided natively by TextInput.State or we can use ScrollView's scrollResponderScrollNativeHandleToKeyboard
+        const scrollResponder = scrollViewRef.current?.getScrollResponder();
+        if (scrollResponder) {
+          // This built-in React Native method calculates exactly where the input is 
+          // and scrolls the view just enough to put the input above the keyboard
+          scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+            node,
+            120, // additional offset/padding above the keyboard
+            true // animated
+          );
+        }
+      }, 300);
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <StatusBar style="light" backgroundColor="#2492D4" />
@@ -62,8 +111,19 @@ export default function VehicleDetailSectionScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.contentContainer, contentInsetStyle]} showsVerticalScrollIndicator={false}>
-        <VehicleDetailSectionContent section={section} title={title} vehicle={vehicle} />
+      <ScrollView 
+        ref={scrollViewRef}
+        contentContainerStyle={[styles.contentContainer, contentInsetStyle]} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+        <VehicleDetailSectionContent 
+          section={section} 
+          title={title} 
+          vehicle={vehicle} 
+          onInputFocus={handleInputFocus}
+        />
       </ScrollView>
 
       <View style={[styles.footer, footerInsetStyle]}>
