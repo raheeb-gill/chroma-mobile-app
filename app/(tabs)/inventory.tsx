@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { Image } from 'expo-image';
 import { FlashList } from '@shopify/flash-list';
 import { Menu, Bell, ChevronDown, Car, Search, SlidersHorizontal, X, Calendar as CalendarIcon } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Vehicle, mockVehicles } from '@/constants/mock-data';
@@ -20,6 +21,11 @@ interface InventoryTabProps {
   tab: TabType;
   isActive: boolean;
   onPress: (tab: TabType) => void;
+}
+
+interface VehicleCardProps {
+  item: Vehicle;
+  onPress: (vehicleId: string) => void;
 }
 
 const InventoryTab = memo(({ tab, isActive, onPress }: InventoryTabProps) => {
@@ -40,9 +46,13 @@ const InventoryTab = memo(({ tab, isActive, onPress }: InventoryTabProps) => {
 });
 InventoryTab.displayName = 'InventoryTab';
 
-const VehicleCard = memo(({ item }: { item: Vehicle }) => {
+const VehicleCard = memo(({ item, onPress }: VehicleCardProps) => {
+  const handlePress = useCallback(() => {
+    onPress(item.id);
+  }, [item.id, onPress]);
+
   return (
-    <View style={styles.vehicleCard}>
+    <Pressable style={styles.vehicleCard} onPress={handlePress}>
       <View style={styles.vehicleImageContainer}>
         <Image
           source={item.image}
@@ -69,7 +79,7 @@ const VehicleCard = memo(({ item }: { item: Vehicle }) => {
         <Text style={styles.vehicleDescription}>{item.description}</Text>
         <Text style={styles.vehicleMileage}>{item.mileage}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 });
 VehicleCard.displayName = 'VehicleCard';
@@ -79,6 +89,7 @@ export default function InventoryScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('All');
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const normalizedSearchQuery = useMemo(() => {
@@ -126,9 +137,16 @@ export default function InventoryScreen() {
     return item.id;
   }, []);
 
+  const handleOpenVehicle = useCallback((vehicleId: string) => {
+    router.push({
+      pathname: '/vehicle-details/[vehicleId]',
+      params: { vehicleId },
+    });
+  }, [router]);
+
   const renderVehicleItem = useCallback(({ item }: ListRenderItemInfo<Vehicle>) => {
-    return <VehicleCard item={item} />;
-  }, []);
+    return <VehicleCard item={item} onPress={handleOpenVehicle} />;
+  }, [handleOpenVehicle]);
 
   return (
     <View style={styles.container}>
