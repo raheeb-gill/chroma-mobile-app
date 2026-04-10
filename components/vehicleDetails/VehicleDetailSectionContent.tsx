@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Plus } from 'lucide-react-native';
 
 import type { Vehicle } from '@/constants/mock-data';
-import { ProductMediaSection, type MediaTab } from './ProductMediaSection';
+import { ProductMediaSection } from './ProductMediaSection';
 import { InstalledPackagesSection } from './InstalledPackagesSection';
 import { ProductOptionsSection } from './ProductOptionsSection';
 import { ProductSummarySection } from './ProductSummarySection';
@@ -26,7 +26,6 @@ export const VehicleDetailSectionContent = ({
   vehicle,
   onInputFocus,
 }: VehicleDetailSectionContentProps) => {
-  const [activeMediaTab, setActiveMediaTab] = useState<MediaTab>('Media');
 
   const mediaItems = useMemo(() => {
     return Array.from({ length: 10 }, (_, index) => index);
@@ -40,8 +39,6 @@ export const VehicleDetailSectionContent = ({
     return (
       <ProductMediaSection
         vehicle={vehicle}
-        activeMediaTab={activeMediaTab}
-        setActiveMediaTab={setActiveMediaTab}
         mediaItems={mediaItems}
       />
     );
