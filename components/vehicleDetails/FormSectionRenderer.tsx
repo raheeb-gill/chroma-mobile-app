@@ -1,6 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
 import { Calendar, ChevronDown } from 'lucide-react-native';
+import { CustomDropdown } from '../ui/CustomDropdown';
+import { CustomCalendar } from '../ui/CustomCalendar';
 
 export type TrailingIcon = 'calendar' | 'chevron' | null;
 
@@ -10,6 +12,8 @@ export interface FormField {
   trailingIcon: TrailingIcon;
   multiline?: boolean;
   minHeight?: number;
+  type?: 'text' | 'dropdown' | 'date';
+  options?: string[];
 }
 
 interface FormSectionRendererProps {
@@ -33,6 +37,9 @@ export const FormSectionRenderer = ({ title, fields, onInputFocus }: FormSection
     createInitialValues(fields)
   );
 
+  const [activeDropdown, setActiveDropdown] = useState<{ label: string, title: string, options: string[] } | null>(null);
+  const [activeCalendar, setActiveCalendar] = useState<{ label: string, title: string } | null>(null);
+
   const handleChangeValue = useCallback((label: string, value: string) => {
     setValues((currentValues) => ({
       ...currentValues,
@@ -55,51 +62,94 @@ export const FormSectionRenderer = ({ title, fields, onInputFocus }: FormSection
       <Text style={styles.sectionHeading}>{title}</Text>
       {fields.map((field) => {
         const isMultiline = Boolean(field.multiline);
+        const isDropdown = field.type === 'dropdown';
+        const isDate = field.type === 'date';
+
         return (
           <View key={field.label} style={styles.fieldBlock}>
             <Text style={styles.fieldLabel}>{field.label}</Text>
-            <View
-              style={[
-                styles.fieldInput,
-                isMultiline && styles.multilineFieldInput,
-                isMultiline && field.minHeight ? { minHeight: field.minHeight } : null,
-              ]}
-            >
-              <TextInput
+            {isDropdown ? (
+              <Pressable 
+                style={styles.fieldInput} 
+                onPress={() => setActiveDropdown({ label: field.label, title: field.label, options: field.options || [] })}
+              >
+                <Text style={styles.dropdownText}>{values[field.label]}</Text>
+                {renderTrailingIcon(field.trailingIcon || 'chevron')}
+              </Pressable>
+            ) : isDate ? (
+              <Pressable 
+                style={styles.fieldInput} 
+                onPress={() => setActiveCalendar({ label: field.label, title: field.label })}
+              >
+                <Text style={styles.dropdownText}>{values[field.label]}</Text>
+                {renderTrailingIcon(field.trailingIcon || 'calendar')}
+              </Pressable>
+            ) : (
+              <View
                 style={[
-                  styles.textInput,
-                  field.trailingIcon && styles.textInputWithIcon,
-                  isMultiline && styles.multilineTextInput,
+                  styles.fieldInput,
+                  isMultiline && styles.multilineFieldInput,
+                  isMultiline && field.minHeight ? { minHeight: field.minHeight } : null,
                 ]}
-                value={values[field.label]}
-                onChangeText={(value) => handleChangeValue(field.label, value)}
-                onFocus={(e) => {
-                  if (onInputFocus) {
-                    onInputFocus(e.target);
-                  }
-                }}
-                placeholderTextColor="#999999"
-                selectionColor="#2492D4"
-                multiline={isMultiline}
-                textAlignVertical={isMultiline ? 'top' : 'center'}
-              />
-              {renderTrailingIcon(field.trailingIcon)}
-            </View>
+              >
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    field.trailingIcon && styles.textInputWithIcon,
+                    isMultiline && styles.multilineTextInput,
+                  ]}
+                  value={values[field.label]}
+                  onChangeText={(value) => handleChangeValue(field.label, value)}
+                  onFocus={(e) => {
+                    if (onInputFocus) {
+                      onInputFocus(e.target);
+                    }
+                  }}
+                  placeholderTextColor="#999999"
+                  selectionColor="#2492D4"
+                  multiline={isMultiline}
+                  textAlignVertical={isMultiline ? 'top' : 'center'}
+                />
+                {renderTrailingIcon(field.trailingIcon)}
+              </View>
+            )}
           </View>
         );
       })}
+      
+      {activeDropdown && (
+        <CustomDropdown
+          visible={!!activeDropdown}
+          title={activeDropdown.title}
+          options={activeDropdown.options}
+          selectedValue={values[activeDropdown.label] || ''}
+          onSelect={(value) => handleChangeValue(activeDropdown.label, value)}
+          onClose={() => setActiveDropdown(null)}
+        />
+      )}
+
+      {activeCalendar && (
+        <CustomCalendar
+          visible={!!activeCalendar}
+          title={activeCalendar.title}
+          selectedDate={values[activeCalendar.label] || ''}
+          onSelect={(value) => handleChangeValue(activeCalendar.label, value)}
+          onClose={() => setActiveCalendar(null)}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   stack: { gap: 12 },
-  sectionHeading: { fontSize: 10, fontWeight: '500', color: '#555555' },
+  sectionHeading: { fontSize: 14, fontWeight: '600', color: '#1E1E1E' },
   fieldBlock: { gap: 6 },
-  fieldLabel: { fontSize: 10, fontWeight: '500', color: '#555555' },
-  fieldInput: { minHeight: 42, borderRadius: 8, backgroundColor: '#EFEFEF', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center' },
-  multilineFieldInput: { alignItems: 'flex-start', paddingVertical: 10 },
-  textInput: { flex: 1, paddingVertical: 11, fontSize: 11, fontWeight: '500', color: '#1E1E1E' },
+  fieldLabel: { fontSize: 12, fontWeight: '500', color: '#555555' },
+  fieldInput: { minHeight: 48, borderRadius: 8, backgroundColor: '#F5F5F5', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center' },
+  multilineFieldInput: { alignItems: 'flex-start', paddingVertical: 12 },
+  textInput: { flex: 1, paddingVertical: 12, fontSize: 14, fontWeight: '500', color: '#1E1E1E' },
+  dropdownText: { flex: 1, fontSize: 14, fontWeight: '500', color: '#1E1E1E' },
   textInputWithIcon: { paddingRight: 10 },
   multilineTextInput: { minHeight: 52, paddingVertical: 0 },
 });
