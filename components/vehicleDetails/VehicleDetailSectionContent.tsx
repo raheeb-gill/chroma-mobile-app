@@ -1,12 +1,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Image } from 'expo-image';
-import { ArrowRight, Calendar, ChevronDown, ChevronUp, CloudUpload, Plus } from 'lucide-react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Calendar, ChevronDown, Plus } from 'lucide-react-native';
 
 import type { Vehicle } from '@/constants/mock-data';
+import { ProductMediaSection, type MediaTab } from './ProductMediaSection';
+import { InstalledPackagesSection } from './InstalledPackagesSection';
+import { ProductOptionsSection } from './ProductOptionsSection';
 
-type MediaTab = 'Media' | 'Social' | 'Dealer Selected';
-type TrailingIcon = 'calendar' | 'chevron' | null;
+export type TrailingIcon = 'calendar' | 'chevron' | null;
 
 interface VehicleDetailSectionContentProps {
   section?: string;
@@ -15,13 +16,7 @@ interface VehicleDetailSectionContentProps {
   onInputFocus?: (node: any) => void;
 }
 
-interface SummaryField {
-  label: string;
-  value: string;
-  trailingIcon: TrailingIcon;
-}
-
-interface FormField {
+export interface FormField {
   label: string;
   value: string;
   trailingIcon: TrailingIcon;
@@ -29,7 +24,7 @@ interface FormField {
   minHeight?: number;
 }
 
-const SUMMARY_FIELDS: SummaryField[] = [
+const SUMMARY_FIELDS: FormField[] = [
   { label: 'VIN', value: '1HGCM82633A123456', trailingIcon: null },
   { label: 'Availability', value: 'Available', trailingIcon: 'chevron' },
   { label: 'Year', value: '2023', trailingIcon: 'calendar' },
@@ -48,64 +43,7 @@ const SUMMARY_FIELDS: SummaryField[] = [
   { label: 'Drive Train', value: '4WD', trailingIcon: null },
   { label: 'Transmission', value: 'Automatic', trailingIcon: 'chevron' },
 ];
-const OEM_CODE_VALUE = 'FE,STDEN,LA,AC,EY,IM,2T,3P,3T,5D,EF,G4,MF,...';
-const PACKAGE_ITEMS = [
-  '1500w Inverter With Two 120v Ac Outlets',
-  '2.5l I4 Engine With Vvt-ie',
-  '50 State Emissions',
-  'All-weather Floor Liners Are Engineered To Precisely Fit Your Vehicle And Made From Flexible, Weather-resistant Material. Built, Full Coverage For Second And Third Rows Is Dual-sided-resistant Backing And Durable, Carpet-turn Fasteners Help Keep',
-  '1500w Inverter With Two 120v Ac Outlets',
-  '2.5l I4 Engine With Vvt-ie',
-  '50 State Emissions',
-  '2.5l I4 Engine With Vvt-ie',
-  '50 State Emissions',
-  '1500w Inverter With Two 120v Ac Outlets',
-  '2.5l I4 Engine With Vvt-ie',
-  '50 State Emissions',
-] as const;
-const OPTION_GROUPS = [
-  {
-    title: 'Custom Features',
-    expanded: true,
-    options: [
-      '* 1-OWNER *',
-      '* TOUCH OF SERVICE HERE *',
-      '* CARFAX 1-OWNER *',
-      '* 4-OWNER *',
-      '* TOUCH OF SERVICE HERE *',
-      '* BLACK X-OWNER *',
-      '* 4-OWNER *',
-      '* TOUCH OF SERVICE HERE *',
-      '* BLACK 1-OWNER *',
-      '* 4-OWNER *',
-      '* TOUCH OF SERVICE HERE *',
-      '* BLACK 1-OWNER *',
-    ],
-  },
-  {
-    title: 'Exterior',
-    expanded: true,
-    options: [
-      '* 4WD *',
-      '* TOUCH OF SERVICE HERE *',
-      '* BLACK 1-OWNER *',
-      '* 4-OWNER *',
-      '* TOUCH OF SERVICE HERE *',
-      '* BLACK 1-OWNER *',
-      '* 4-OWNER *',
-      '* TOUCH OF SERVICE HERE *',
-      '* BLACK 1-OWNER *',
-      '* 4-OWNER *',
-      '* TOUCH OF SERVICE HERE *',
-      '* BLACK 1-OWNER *',
-    ],
-  },
-  { title: 'Interior', expanded: false, options: [] },
-  { title: 'Mechanical', expanded: false, options: [] },
-  { title: 'Safety', expanded: false, options: [] },
-  { title: 'Technology', expanded: false, options: [] },
-  { title: 'Other', expanded: false, options: [] },
-] as const;
+
 const COMMENT_BLOCKS = [
   {
     label: 'Headline',
@@ -174,8 +112,6 @@ const CATEGORIZATION_FIELDS = [
   { label: 'Vehicle Category', value: 'Select', trailingIcon: 'chevron' },
   { label: 'Expiration Date', value: 'Monday, June 23, 2025', trailingIcon: 'calendar' },
 ] as const satisfies readonly FormField[];
-const MEDIA_TABS: MediaTab[] = ['Media', 'Social', 'Dealer Selected'];
-const SELECTED_MEDIA_INDEXES = [2, 3];
 
 const createInitialValues = (
   fields: readonly { label: string; value: string }[]
@@ -325,110 +261,21 @@ export const VehicleDetailSectionContent = ({
 
   if (section === 'product-media') {
     return (
-      <View style={styles.stack}>
-        <Text style={styles.sectionHeading}>Product Media</Text>
-        <Pressable style={styles.uploadBox}>
-          <CloudUpload size={18} color="#B8B8B8" />
-          <Text style={styles.uploadText}>Upload Media</Text>
-        </Pressable>
-        <View style={styles.mediaHeader}>
-          <Text style={styles.mediaHeaderLabel}>Media</Text>
-          <View style={styles.mediaTabs}>
-            {MEDIA_TABS.map((tab) => (
-              <Pressable
-                key={tab}
-                style={styles.mediaTab}
-                onPress={() => setActiveMediaTab(tab)}
-              >
-                <Text style={[styles.mediaTabText, activeMediaTab === tab && styles.mediaTabTextActive]}>
-                  {tab}
-                </Text>
-                {activeMediaTab === tab ? <View style={styles.mediaTabUnderline} /> : null}
-              </Pressable>
-            ))}
-          </View>
-        </View>
-        <View style={styles.mediaGrid}>
-          {mediaItems.map((item) => (
-            <Pressable key={`${activeMediaTab}-${item}`} style={styles.mediaCard}>
-              <Image
-                source={vehicle.image}
-                style={styles.mediaThumb}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-                recyclingKey={`${vehicle.id}-${activeMediaTab}-${item}`}
-                transition={0}
-              />
-              {item === 0 ? (
-                <View style={styles.primaryBadge}>
-                  <Text style={styles.primaryBadgeText}>Primary</Text>
-                </View>
-              ) : null}
-              {SELECTED_MEDIA_INDEXES.includes(item) ? <View style={styles.selectedBadge} /> : null}
-            </Pressable>
-          ))}
-        </View>
-      </View>
+      <ProductMediaSection
+        vehicle={vehicle}
+        activeMediaTab={activeMediaTab}
+        setActiveMediaTab={setActiveMediaTab}
+        mediaItems={mediaItems}
+      />
     );
   }
 
   if (section === 'installed-packages') {
-    return (
-      <View style={styles.stack}>
-        <Text style={styles.sectionHeading}>Installed Packages</Text>
-        <View style={styles.packagesSection}>
-          <Text style={styles.fieldLabel}>OEM Code List</Text>
-          <View style={styles.oemCodePill}>
-            <Text style={styles.oemCodeText}>{OEM_CODE_VALUE}</Text>
-          </View>
-        </View>
-        <View style={styles.packageListCard}>
-          <View style={styles.packageListHeader}>
-            <Text style={styles.packageListHeaderText}>Package</Text>
-          </View>
-          {PACKAGE_ITEMS.map((item, index) => (
-            <View
-              key={`${item}-${index}`}
-              style={[styles.packageRow, index === PACKAGE_ITEMS.length - 1 && styles.packageRowLast]}
-            >
-              <View style={styles.packageCheckbox} />
-              <Text style={styles.packageRowText}>{item}</Text>
-              <ArrowRight size={14} color="#2492D4" />
-            </View>
-          ))}
-        </View>
-      </View>
-    );
+    return <InstalledPackagesSection />;
   }
 
   if (section === 'product-options') {
-    return (
-      <View style={styles.stack}>
-        <Text style={styles.sectionHeading}>Product Options</Text>
-        {OPTION_GROUPS.map((group) => (
-          <View key={group.title} style={styles.groupCard}>
-            <View style={styles.groupHeader}>
-              <Text style={styles.groupTitle}>{group.title}</Text>
-              {group.expanded ? (
-                <ChevronUp size={16} color="#666666" />
-              ) : (
-                <ChevronDown size={16} color="#666666" />
-              )}
-            </View>
-            {group.expanded ? (
-              <View style={styles.groupOptions}>
-                {group.options.map((option, index) => (
-                  <View key={`${group.title}-${index}`} style={styles.optionRow}>
-                    <View style={styles.optionCheckbox} />
-                    <Text style={styles.optionText}>{option}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-          </View>
-        ))}
-      </View>
-    );
+    return <ProductOptionsSection />;
   }
 
   if (section === 'product-comments') {
@@ -501,40 +348,6 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, paddingVertical: 11, fontSize: 11, fontWeight: '500', color: '#1E1E1E' },
   textInputWithIcon: { paddingRight: 10 },
   multilineTextInput: { minHeight: 52, paddingVertical: 0 },
-  uploadBox: { height: 118, borderRadius: 8, backgroundColor: '#ECECEC', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  uploadText: { fontSize: 8, fontWeight: '500', color: '#8A8A8A' },
-  mediaHeader: { gap: 6 },
-  mediaHeaderLabel: { fontSize: 10, fontWeight: '500', color: '#555555' },
-  mediaTabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E8E8E8' },
-  mediaTab: { flex: 1, height: 28, alignItems: 'center', justifyContent: 'center' },
-  mediaTabText: { fontSize: 8, fontWeight: '500', color: '#7C7C7C' },
-  mediaTabTextActive: { color: '#2492D4' },
-  mediaTabUnderline: { position: 'absolute', bottom: -1, width: 40, height: 1.5, backgroundColor: '#2492D4' },
-  mediaGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
-  mediaCard: { width: '48.3%', borderRadius: 10, overflow: 'hidden', position: 'relative' },
-  mediaThumb: { width: '100%', aspectRatio: 1.1, borderRadius: 10, backgroundColor: '#DDDDDD' },
-  primaryBadge: { position: 'absolute', left: 8, bottom: 8, borderRadius: 10, backgroundColor: 'rgba(0, 0, 0, 0.55)', paddingHorizontal: 8, paddingVertical: 3 },
-  primaryBadgeText: { fontSize: 8, fontWeight: '600', color: '#FFFFFF' },
-  selectedBadge: { position: 'absolute', top: 8, right: 8, width: 14, height: 14, borderRadius: 4, backgroundColor: '#2492D4', borderWidth: 1.5, borderColor: '#FFFFFF' },
-  packagesSection: { gap: 8 },
-  oemCodePill: { minHeight: 34, borderRadius: 8, backgroundColor: '#EFEFEF', paddingHorizontal: 12, justifyContent: 'center' },
-  oemCodeText: { fontSize: 10, fontWeight: '500', color: '#8B8B8B' },
-  packageListCard: { borderRadius: 10, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E6E6E6', overflow: 'hidden' },
-  packageListHeader: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
-  packageListHeaderText: { fontSize: 10, fontWeight: '500', color: '#8C8C8C' },
-  packageRow: { minHeight: 41, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
-  packageRowLast: { borderBottomWidth: 0 },
-  packageCheckbox: { width: 12, height: 12, borderRadius: 2, borderWidth: 1, borderColor: '#D8D8D8', backgroundColor: '#FFFFFF', marginRight: 8, marginTop: 2 },
-  packageRowText: { flex: 1, fontSize: 9, lineHeight: 14, fontWeight: '500', color: '#555555', marginRight: 8 },
-  optionCard: { minHeight: 46, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E7E7E7', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  optionCardTitle: { flex: 1, fontSize: 11, fontWeight: '500', color: '#333333', marginRight: 12 },
-  groupCard: { borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E4E4E4', overflow: 'hidden' },
-  groupHeader: { minHeight: 34, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  groupTitle: { fontSize: 9, fontWeight: '500', color: '#555555' },
-  groupOptions: { paddingHorizontal: 10, paddingBottom: 10, gap: 8 },
-  optionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  optionCheckbox: { width: 10, height: 10, borderRadius: 2, borderWidth: 1, borderColor: '#DADADA', backgroundColor: '#FFFFFF', marginTop: 3 },
-  optionText: { flex: 1, fontSize: 8.5, lineHeight: 14, fontWeight: '500', color: '#666666' },
   placeholderCard: { minHeight: 180, borderRadius: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E7E7E7', alignItems: 'center', justifyContent: 'center', padding: 20, gap: 12 },
   placeholderIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EAF5FD', alignItems: 'center', justifyContent: 'center' },
   placeholderTitle: { fontSize: 16, fontWeight: '700', color: '#1E1E1E' },
