@@ -3,13 +3,23 @@ import { StyleSheet, View, Text, Pressable, ScrollView, Modal, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, Bell, ChevronDown, Car, TrendingUp, ArrowRight, ListChecks, Atom, Search, X, Activity } from 'lucide-react-native';
 import { FlashList } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
 
 import { Dealer, mockSubDealers } from '@/constants/mock-data';
 
 export default function DashboardScreen() {
-  const [isSubDealerModalVisible, setSubDealerModalVisible] = useState(false);
+  const router = useRouter();
+  const [isDealerModalVisible, setDealerModalVisible] = useState(false);
+  const [dealerModalType, setDealerModalType] = useState<'Main' | 'Sub' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDealerId, setSelectedDealerId] = useState<string | null>(null);
+
+  const openDealerModal = (type: 'Main' | 'Sub') => {
+    setDealerModalType(type);
+    setSelectedDealerId(null);
+    setSearchQuery('');
+    setDealerModalVisible(true);
+  };
 
   const filteredDealers = React.useMemo(() => {
     if (!searchQuery) return mockSubDealers;
@@ -53,12 +63,12 @@ export default function DashboardScreen() {
           </Pressable>
 
           <View style={styles.rightNav}>
-            <Pressable style={styles.dealerSelector}>
+            <Pressable style={styles.dealerSelector} onPress={() => openDealerModal('Main')}>
               <Text style={styles.dealerSelectorText}>Demo Dealer 1</Text>
               <ChevronDown color="#FFFFFF" size={16} style={styles.dealerChevron} />
             </Pressable>
             
-            <Pressable style={styles.notificationButton}>
+            <Pressable style={styles.notificationButton} onPress={() => router.push('/notifications')}>
               <Bell color="#FFFFFF" size={20} />
               <View style={styles.notificationDot} />
             </Pressable>
@@ -73,7 +83,7 @@ export default function DashboardScreen() {
             </Text>
           </View>
 
-          <Pressable style={styles.mainDealerCard} onPress={() => setSubDealerModalVisible(true)}>
+          <Pressable style={styles.mainDealerCard} onPress={() => openDealerModal('Sub')}>
             <View style={styles.mainDealerRow}>
               <View style={styles.dealerLogoBox}>
                 <Atom size={28} color="#1C9EF4" />
@@ -160,20 +170,20 @@ export default function DashboardScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Sub Dealer Modal */}
+      {/* Dealer Modal */}
       <Modal
-        visible={isSubDealerModalVisible}
+        visible={isDealerModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setSubDealerModalVisible(false)}
+        onRequestClose={() => setDealerModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Switch Sub Dealer</Text>
+              <Text style={styles.modalTitle}>Switch {dealerModalType} Dealer</Text>
               <Pressable
                 style={styles.modalCloseButton}
-                onPress={() => setSubDealerModalVisible(false)}
+                onPress={() => setDealerModalVisible(false)}
               >
                 <X size={16} color="#999999" />
               </Pressable>
@@ -203,14 +213,14 @@ export default function DashboardScreen() {
 
             <View style={styles.modalFooter}>
               <Pressable
-                onPress={() => setSubDealerModalVisible(false)}
+                onPress={() => setDealerModalVisible(false)}
                 disabled={!selectedDealerId}
                 style={[
                   styles.modalSwitchButton,
                   !selectedDealerId ? styles.modalSwitchButtonDisabled : styles.modalSwitchButtonEnabled,
                 ]}
               >
-                <Text style={styles.modalSwitchButtonText}>Switch Sub Dealer</Text>
+                <Text style={styles.modalSwitchButtonText}>Switch {dealerModalType} Dealer</Text>
               </Pressable>
             </View>
           </View>

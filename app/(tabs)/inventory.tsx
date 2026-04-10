@@ -6,7 +6,7 @@ import { Menu, Bell, ChevronDown, Car, Search, SlidersHorizontal, X, Calendar as
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Vehicle, mockVehicles } from '@/constants/mock-data';
+import { Dealer, Vehicle, mockSubDealers, mockVehicles } from '@/constants/mock-data';
 import type { ListRenderItemInfo } from '@shopify/flash-list';
 
 const nalleyLogo = require('@/assets/images/react-logo.png');
@@ -86,8 +86,12 @@ VehicleCard.displayName = 'VehicleCard';
 
 export default function InventoryScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [dealerSearchQuery, setDealerSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('All');
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+  const [isDealerModalVisible, setDealerModalVisible] = useState(false);
+  const [dealerModalType, setDealerModalType] = useState<'Main' | 'Sub' | null>(null);
+  const [selectedDealerId, setSelectedDealerId] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -109,6 +113,13 @@ export default function InventoryScreen() {
     });
   }, [normalizedSearchQuery, activeTab]);
 
+  const filteredDealers = useMemo(() => {
+    if (!dealerSearchQuery) return mockSubDealers;
+    return mockSubDealers.filter((d) =>
+      d.name.toLowerCase().includes(dealerSearchQuery.toLowerCase())
+    );
+  }, [dealerSearchQuery]);
+
   const modalFooterInsetStyle = useMemo(() => {
     return { paddingBottom: insets.bottom + 20 };
   }, [insets.bottom]);
@@ -123,6 +134,13 @@ export default function InventoryScreen() {
 
   const handleCloseFilters = useCallback(() => {
     setFilterModalVisible(false);
+  }, []);
+
+  const openDealerModal = useCallback((type: 'Main' | 'Sub') => {
+    setDealerModalType(type);
+    setSelectedDealerId(null);
+    setDealerSearchQuery('');
+    setDealerModalVisible(true);
   }, []);
 
   const handleSelectTab = useCallback((tab: TabType) => {
@@ -148,6 +166,30 @@ export default function InventoryScreen() {
     return <VehicleCard item={item} onPress={handleOpenVehicle} />;
   }, [handleOpenVehicle]);
 
+  const renderDealerItem = useCallback(({ item }: { item: Dealer }) => {
+    const isSelected = selectedDealerId === item.id;
+    return (
+      <Pressable
+        style={[styles.modalDealerCard, isSelected && styles.modalDealerCardSelected]}
+        onPress={() => setSelectedDealerId(item.id)}
+      >
+        <View style={styles.modalDealerLogoContainer}>
+          <Text style={styles.modalDealerLogoFallback}>NALLEY</Text>
+        </View>
+        <View style={styles.modalDealerInfo}>
+          <Text style={styles.modalDealerName}>{item.name}</Text>
+          <View style={styles.modalDealerMetaRow}>
+            <Car size={14} color="#777777" />
+            <Text style={styles.modalDealerMetaText}>{item.vehiclesCount} vehicles</Text>
+          </View>
+        </View>
+        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+          {isSelected && <Car size={14} color="#FFFFFF" />}
+        </View>
+      </Pressable>
+    );
+  }, [selectedDealerId]);
+
   return (
     <View style={styles.container}>
       <View style={styles.headerBackground} />
@@ -159,12 +201,12 @@ export default function InventoryScreen() {
           </Pressable>
 
           <View style={styles.rightNav}>
-            <Pressable style={styles.dealerSelector}>
+            <Pressable style={styles.dealerSelector} onPress={() => openDealerModal('Main')}>
               <Text style={styles.dealerSelectorText}>Demo Dealer 1</Text>
               <ChevronDown color="#FFFFFF" size={16} style={styles.dealerChevron} />
             </Pressable>
             
-            <Pressable style={styles.notificationButton}>
+            <Pressable style={styles.notificationButton} onPress={() => router.push('/notifications')}>
               <Bell color="#FFFFFF" size={20} />
               <View style={styles.notificationDot} />
             </Pressable>
@@ -177,7 +219,7 @@ export default function InventoryScreen() {
         </View>
 
         <View style={styles.mainContent}>
-          <View style={styles.mainDealerCard}>
+          <Pressable style={styles.mainDealerCard} onPress={() => openDealerModal('Sub')}>
             <View style={styles.mainDealerRow}>
               <View style={styles.dealerLogoBox}>
                 <Image source={nalleyLogo} style={styles.dealerLogo} contentFit="contain" />
@@ -191,7 +233,7 @@ export default function InventoryScreen() {
               </View>
               <ChevronDown color="#1C9EF4" size={24} />
             </View>
-          </View>
+          </Pressable>
 
           <View style={styles.searchAndFilterRow}>
             <View style={styles.searchContainer}>
@@ -236,6 +278,62 @@ export default function InventoryScreen() {
           </View>
         </View>
       </SafeAreaView>
+
+      <Modal
+        visible={isDealerModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDealerModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Switch {dealerModalType} Dealer</Text>
+              <Pressable
+                style={styles.modalCloseButton}
+                onPress={() => setDealerModalVisible(false)}
+              >
+                <X size={16} color="#999999" />
+              </Pressable>
+            </View>
+
+            <View style={styles.modalSearchContainer}>
+              <TextInput
+                style={styles.modalSearchInput}
+                placeholder="Search dealer"
+                placeholderTextColor="#999999"
+                value={dealerSearchQuery}
+                onChangeText={setDealerSearchQuery}
+                autoCorrect={false}
+              />
+              <Search size={20} color="#1E1E1E" style={styles.modalSearchIcon} />
+            </View>
+
+            <View style={styles.modalListContainer}>
+              <FlashList
+                data={filteredDealers}
+                renderItem={renderDealerItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.modalListContent as any}
+                showsVerticalScrollIndicator={false}
+              />
+            </View>
+
+            <View style={styles.modalFooter}>
+              <Pressable
+                onPress={() => setDealerModalVisible(false)}
+                disabled={!selectedDealerId}
+                style={[
+                  styles.modalSwitchButton,
+                  !selectedDealerId ? styles.modalSwitchButtonDisabled : styles.modalSwitchButtonEnabled,
+                ]}
+              >
+                <Text style={styles.modalSwitchButtonText}>Switch {dealerModalType} Dealer</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Filter Modal */}
       <Modal
@@ -682,12 +780,114 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999999',
   },
+  modalSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    height: 48,
+    marginHorizontal: 20,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  modalSearchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1E1E1E',
+    height: '100%',
+  },
+  modalSearchIcon: {
+    marginLeft: 8,
+  },
+  modalListContainer: {
+    flex: 1,
+  },
+  modalListContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  modalDealerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  modalDealerCardSelected: {
+    borderColor: '#2492D4',
+  },
+  modalDealerLogoContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  modalDealerLogoFallback: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#1E1E1E',
+  },
+  modalDealerInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  modalDealerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E1E1E',
+  },
+  modalDealerMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  modalDealerMetaText: {
+    fontSize: 14,
+    color: '#777777',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  checkboxSelected: {
+    backgroundColor: '#2492D4',
+    borderColor: '#2492D4',
+  },
   modalFooter: {
     paddingHorizontal: 20,
     paddingTop: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
+  },
+  modalSwitchButton: {
+    height: 48,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalSwitchButtonEnabled: {
+    backgroundColor: '#2492D4',
+  },
+  modalSwitchButtonDisabled: {
+    backgroundColor: '#979797',
+  },
+  modalSwitchButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   applyButton: {
     height: 48,
