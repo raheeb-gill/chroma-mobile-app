@@ -22,7 +22,6 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="main-dealer" options={{ headerShown: false }} />
           <Stack.Screen name="sub-dealer" options={{ headerShown: false }} />
-          <Stack.Screen name="vin-entry" options={{ headerShown: false }} />
           <Stack.Screen name="notifications" options={{ headerShown: false }} />
           <Stack.Screen name="vehicle-details" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

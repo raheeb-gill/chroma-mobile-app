@@ -1,7 +1,7 @@
 import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Home, Car, Search, Activity, User } from 'lucide-react-native';
+import { Home, ScanLine, User, LayoutGrid } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,34 +37,14 @@ export default function TabLayout() {
         name="inventory"
         options={{
           title: 'Inventory',
-          tabBarIcon: ({ color }) => <Car size={24} color={color} />,
+          tabBarIcon: ({ color }) => <LayoutGrid size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="action"
+        name="vin-entry"
         options={{
-          title: '',
-          tabBarIcon: ({ color }) => (
-            <View style={styles.actionButtonContainer}>
-              <View style={styles.actionButton}>
-                <Car size={24} color="#FFFFFF" />
-                <Search size={14} color="#FFFFFF" style={styles.actionSearchIcon} />
-              </View>
-            </View>
-          ),
-        }}
-        listeners={() => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            router.push('/vin-entry');
-          },
-        })}
-      />
-      <Tabs.Screen
-        name="analytics"
-        options={{
-          title: 'Analytics',
-          tabBarIcon: ({ color }) => <Activity size={24} color={color} />,
+          title: 'VIN',
+          tabBarIcon: ({ color }) => <ScanLine size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -72,6 +52,18 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <User size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="action"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

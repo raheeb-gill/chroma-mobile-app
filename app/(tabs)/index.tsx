@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, Bell, ChevronDown, Car, TrendingUp, ArrowRight, ListChecks, Atom, Search, X, Activity } from 'lucide-react-native';
+import { Menu, Bell, ChevronDown, Car, TrendingUp, ArrowRight, ListChecks, Atom, Search, X, Activity, LayoutGrid } from 'lucide-react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 
@@ -144,9 +144,9 @@ export default function DashboardScreen() {
           <View style={styles.quickActionsSection}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             
-            <Pressable style={styles.actionCard}>
+            <Pressable style={styles.actionCard} onPress={() => router.push('/inventory')}>
               <View style={styles.actionIconBox}>
-                <Car size={20} color="#1C9EF4" />
+                <LayoutGrid size={20} color="#1C9EF4" />
               </View>
               <View style={styles.actionInfo}>
                 <Text style={styles.actionTitle}>View Inventory</Text>
