@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Plus } from 'lucide-react-native';
 
@@ -27,9 +27,13 @@ export const VehicleDetailSectionContent = ({
   onInputFocus,
 }: VehicleDetailSectionContentProps) => {
 
-  const mediaItems = useMemo(() => {
+  const [mediaItems, setMediaItems] = useState<any[]>(() => {
     return Array.from({ length: 10 }, (_, index) => index);
-  }, []);
+  });
+
+  const handleAddMedia = (uri: string) => {
+    setMediaItems((prev) => [uri, ...prev]);
+  };
 
   if (section === 'product-summary') {
     return <ProductSummarySection onInputFocus={onInputFocus} />;
@@ -40,6 +44,7 @@ export const VehicleDetailSectionContent = ({
       <ProductMediaSection
         vehicle={vehicle}
         mediaItems={mediaItems}
+        onAddMedia={handleAddMedia}
       />
     );
   }

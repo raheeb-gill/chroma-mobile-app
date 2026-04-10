@@ -1,20 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Camera } from 'lucide-react-native';
 import type { Vehicle } from '@/constants/mock-data';
+import { MediaUploadWizard } from './MediaUploadWizard';
 
 export const SELECTED_MEDIA_INDEXES = [2, 3];
 
 interface ProductMediaSectionProps {
   vehicle: Vehicle;
   mediaItems: number[];
+  onAddMedia?: (uri: string) => void;
 }
 
 export const ProductMediaSection = ({
   vehicle,
   mediaItems,
+  onAddMedia,
 }: ProductMediaSectionProps) => {
+  const [isWizardVisible, setIsWizardVisible] = useState(false);
+
+  const handleUploadComplete = (uri: string) => {
+    if (onAddMedia) {
+      onAddMedia(uri);
+    }
+  };
+
   return (
     <View style={styles.stack}>
       <View style={styles.headerContainer}>
@@ -22,7 +33,7 @@ export const ProductMediaSection = ({
         <View style={styles.divider} />
       </View>
       
-      <Pressable style={styles.uploadBox}>
+      <Pressable style={styles.uploadBox} onPress={() => setIsWizardVisible(true)}>
         <Camera size={24} color="#B8B8B8" />
         <Text style={styles.uploadText}>Upload Media</Text>
       </Pressable>
@@ -43,7 +54,7 @@ export const ProductMediaSection = ({
         {mediaItems.map((item) => (
           <Pressable key={`media-${item}`} style={styles.mediaCard}>
             <Image
-              source={vehicle.image}
+              source={typeof item === 'string' ? { uri: item } : vehicle.image}
               style={styles.mediaThumb}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -59,6 +70,12 @@ export const ProductMediaSection = ({
           </Pressable>
         ))}
       </View>
+
+      <MediaUploadWizard 
+        visible={isWizardVisible} 
+        onClose={() => setIsWizardVisible(false)} 
+        onComplete={handleUploadComplete} 
+      />
     </View>
   );
 };
