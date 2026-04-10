@@ -77,6 +77,7 @@ export default function VehicleDetailSectionScreen() {
   }, [insets.top]);
 
   const handleBack = useCallback(() => {
+    Keyboard.dismiss();
     router.back();
   }, [router]);
 

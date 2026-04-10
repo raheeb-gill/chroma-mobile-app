@@ -101,8 +101,7 @@ export default function VehicleDetailsScreen() {
             style={styles.heroImage}
             contentFit="cover"
             cachePolicy="memory-disk"
-            recyclingKey={vehicle.id}
-            transition={0}
+            transition={200}
           />
         </View>
 

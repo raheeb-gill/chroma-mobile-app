@@ -174,7 +174,6 @@ export default function InventoryScreen() {
               getItemType={getItemType}
               drawDistance={VEHICLE_LIST_DRAW_DISTANCE}
               overrideProps={listOverrideProps}
-              removeClippedSubviews
               contentContainerStyle={styles.listContent as any}
               showsVerticalScrollIndicator={false}
             />

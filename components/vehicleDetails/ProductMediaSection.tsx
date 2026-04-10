@@ -58,8 +58,7 @@ export const ProductMediaSection = ({
               style={styles.mediaThumb}
               contentFit="cover"
               cachePolicy="memory-disk"
-              recyclingKey={`${vehicle.id}-media-${item}`}
-              transition={0}
+              transition={200}
             />
             {item === 0 ? (
               <View style={styles.primaryBadge}>

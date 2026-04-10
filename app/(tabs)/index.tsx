@@ -623,6 +623,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+
   },
   modalSwitchButtonEnabled: {
     backgroundColor: '#2492D4',

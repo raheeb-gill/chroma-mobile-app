@@ -21,8 +21,7 @@ export const VehicleCard = memo(({ item, onPress }: VehicleCardProps) => {
           style={styles.vehicleImage}
           contentFit="cover"
           cachePolicy="memory-disk"
-          recyclingKey={item.id}
-          transition={0}
+          transition={200}
         />
         <View style={styles.vehicleStatusBadge}>
           <Text style={styles.vehicleStatusText}>{item.status}</Text>
